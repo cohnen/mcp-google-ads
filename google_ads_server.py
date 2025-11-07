@@ -1524,18 +1524,54 @@ async def create_pmax_campaign(
         country_codes: ["TH"]
         language_codes: ["th"]
     """
-    # Phase 2: Implementation will be added
-    return json.dumps({
-        "status": "stub",
-        "message": "create_pmax_campaign will be implemented in Phase 2",
-        "requested_params": {
-            "account_id": account_id,
-            "campaign_name": campaign_name,
-            "daily_budget_micros": daily_budget_micros,
-            "daily_budget_currency": daily_budget_currency,
-            "target_roas": target_roas
-        }
-    }, indent=2)
+    try:
+        # Validate required parameters
+        if not daily_budget_micros and not daily_budget_currency:
+            return json.dumps({
+                "error": "Either daily_budget_micros or daily_budget_currency must be provided"
+            }, indent=2)
+
+        # Get credentials and headers
+        creds = get_credentials()
+        headers = get_headers(creds)
+
+        # Import and call the implementation
+        from mutate.pmax import create_pmax_campaign_full
+
+        result = create_pmax_campaign_full(
+            credentials=creds,
+            headers=headers,
+            account_id=account_id,
+            campaign_name=campaign_name,
+            daily_budget_micros=daily_budget_micros,
+            daily_budget_currency=daily_budget_currency,
+            target_roas=target_roas,
+            merchant_center_id=merchant_center_id,
+            feed_label=feed_label,
+            start_date=start_date,
+            end_date=end_date,
+            status=status,
+            final_url=final_url,
+            country_codes=country_codes,
+            language_codes=language_codes,
+            api_version=API_VERSION
+        )
+
+        return json.dumps(result, indent=2)
+
+    except ValueError as e:
+        logger.error(f"Validation error in create_pmax_campaign: {str(e)}")
+        return json.dumps({
+            "error": "Validation error",
+            "message": str(e)
+        }, indent=2)
+    except Exception as e:
+        logger.error(f"Error in create_pmax_campaign: {str(e)}")
+        return json.dumps({
+            "error": "Failed to create campaign",
+            "message": str(e),
+            "type": type(e).__name__
+        }, indent=2)
 
 @mcp.tool()
 async def update_campaign_budget(
