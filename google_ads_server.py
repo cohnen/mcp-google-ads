@@ -1739,16 +1739,53 @@ async def pause_campaign(
         account_id: "1234567890"
         campaign_id: "9876543210"
     """
-    # Phase 4: Implementation will be added
-    return json.dumps({
-        "status": "stub",
-        "message": "pause_campaign will be implemented in Phase 4",
-        "requested_params": {
-            "account_id": account_id,
-            "campaign_id": campaign_id,
-            "campaign_ids": campaign_ids
-        }
-    }, indent=2)
+    try:
+        creds = get_credentials()
+        headers = get_headers(creds)
+
+        from mutate.status import pause_campaigns, find_campaigns_by_pattern
+        from mutate.utils import format_customer_id, parse_resource_name
+
+        formatted_customer_id = format_customer_id(account_id)
+
+        # Determine which campaigns to pause
+        ids_to_pause = []
+
+        if campaign_id:
+            ids_to_pause.append(campaign_id)
+        elif campaign_ids:
+            ids_to_pause.extend(campaign_ids)
+        elif campaign_resource_name:
+            parsed = parse_resource_name(campaign_resource_name)
+            ids_to_pause.append(parsed['resource_id'])
+        elif campaign_name_pattern:
+            if not confirm:
+                return json.dumps({
+                    "error": "Confirmation required",
+                    "message": "Pattern matching requires confirm=true to prevent accidental bulk operations"
+                }, indent=2)
+            ids_to_pause = find_campaigns_by_pattern(headers, formatted_customer_id, campaign_name_pattern, API_VERSION)
+        else:
+            return json.dumps({
+                "error": "No campaigns specified",
+                "message": "Provide campaign_id, campaign_ids, campaign_resource_name, or campaign_name_pattern"
+            }, indent=2)
+
+        if not ids_to_pause:
+            return json.dumps({
+                "message": "No campaigns found matching criteria"
+            }, indent=2)
+
+        result = pause_campaigns(creds, headers, formatted_customer_id, ids_to_pause, API_VERSION)
+        return json.dumps(result, indent=2)
+
+    except Exception as e:
+        logger.error(f"Error in pause_campaign: {str(e)}")
+        return json.dumps({
+            "error": "Failed to pause campaign(s)",
+            "message": str(e),
+            "type": type(e).__name__
+        }, indent=2)
 
 @mcp.tool()
 async def enable_campaign(
@@ -1780,16 +1817,53 @@ async def enable_campaign(
         campaign_id: "9876543210"
         safety_check: true
     """
-    # Phase 4: Implementation will be added
-    return json.dumps({
-        "status": "stub",
-        "message": "enable_campaign will be implemented in Phase 4",
-        "requested_params": {
-            "account_id": account_id,
-            "campaign_id": campaign_id,
-            "safety_check": safety_check
-        }
-    }, indent=2)
+    try:
+        creds = get_credentials()
+        headers = get_headers(creds)
+
+        from mutate.status import enable_campaigns, find_campaigns_by_pattern
+        from mutate.utils import format_customer_id, parse_resource_name
+
+        formatted_customer_id = format_customer_id(account_id)
+
+        # Determine which campaigns to enable
+        ids_to_enable = []
+
+        if campaign_id:
+            ids_to_enable.append(campaign_id)
+        elif campaign_ids:
+            ids_to_enable.extend(campaign_ids)
+        elif campaign_resource_name:
+            parsed = parse_resource_name(campaign_resource_name)
+            ids_to_enable.append(parsed['resource_id'])
+        elif campaign_name_pattern:
+            if not confirm:
+                return json.dumps({
+                    "error": "Confirmation required",
+                    "message": "Pattern matching requires confirm=true to prevent accidental bulk operations"
+                }, indent=2)
+            ids_to_enable = find_campaigns_by_pattern(headers, formatted_customer_id, campaign_name_pattern, API_VERSION)
+        else:
+            return json.dumps({
+                "error": "No campaigns specified",
+                "message": "Provide campaign_id, campaign_ids, campaign_resource_name, or campaign_name_pattern"
+            }, indent=2)
+
+        if not ids_to_enable:
+            return json.dumps({
+                "message": "No campaigns found matching criteria"
+            }, indent=2)
+
+        result = enable_campaigns(creds, headers, formatted_customer_id, ids_to_enable, safety_check, API_VERSION)
+        return json.dumps(result, indent=2)
+
+    except Exception as e:
+        logger.error(f"Error in enable_campaign: {str(e)}")
+        return json.dumps({
+            "error": "Failed to enable campaign(s)",
+            "message": str(e),
+            "type": type(e).__name__
+        }, indent=2)
 
 @mcp.tool()
 async def attach_merchant_center(
@@ -1827,17 +1901,61 @@ async def attach_merchant_center(
         sales_country: "TH"
         language_code: "th"
     """
-    # Phase 4: Implementation will be added
-    return json.dumps({
-        "status": "stub",
-        "message": "attach_merchant_center will be implemented in Phase 4",
-        "requested_params": {
-            "account_id": account_id,
-            "campaign_id": campaign_id,
-            "merchant_center_id": merchant_center_id,
-            "feed_label": feed_label
-        }
-    }, indent=2)
+    try:
+        # Get credentials
+        creds = get_credentials()
+        headers = get_headers(creds)
+
+        # Import utilities and PMax handler
+        from mutate.utils import format_customer_id, build_campaign_resource_name
+        from mutate.pmax import PerformanceMaxCampaign
+
+        # Format customer ID
+        formatted_customer_id = format_customer_id(account_id)
+
+        # Determine campaign resource name
+        if campaign_resource_name:
+            final_campaign_resource_name = campaign_resource_name
+        elif campaign_id:
+            final_campaign_resource_name = build_campaign_resource_name(formatted_customer_id, campaign_id)
+        else:
+            return json.dumps({
+                "error": "Validation error",
+                "message": "Either campaign_id or campaign_resource_name must be provided"
+            }, indent=2)
+
+        # Initialize PMax handler
+        pmax = PerformanceMaxCampaign(creds, headers, API_VERSION)
+
+        # Attach Merchant Center feed
+        result = pmax.attach_merchant_center_feed(
+            customer_id=formatted_customer_id,
+            campaign_resource_name=final_campaign_resource_name,
+            merchant_center_id=merchant_center_id,
+            feed_label=feed_label
+        )
+
+        # Add campaign info to result
+        result["account_id"] = account_id
+        result["campaign_resource_name"] = final_campaign_resource_name
+
+        logger.info(f"Successfully attached Merchant Center {merchant_center_id} to campaign {final_campaign_resource_name}")
+
+        return json.dumps(result, indent=2)
+
+    except ValueError as e:
+        logger.error(f"Validation error in attach_merchant_center: {str(e)}")
+        return json.dumps({
+            "error": "Validation error",
+            "message": str(e)
+        }, indent=2)
+    except Exception as e:
+        logger.error(f"Error in attach_merchant_center: {str(e)}")
+        return json.dumps({
+            "error": "Failed to attach Merchant Center",
+            "message": str(e),
+            "type": type(e).__name__
+        }, indent=2)
 
 if __name__ == "__main__":
     # Start the MCP server on stdio transport
