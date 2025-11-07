@@ -1605,16 +1605,49 @@ async def update_campaign_budget(
         adjustment_type: "INCREASE_BY_PERCENT"
         adjustment_value: 20  # Increase budget by 20%
     """
-    # Phase 3: Implementation will be added
-    return json.dumps({
-        "status": "stub",
-        "message": "update_campaign_budget will be implemented in Phase 3",
-        "requested_params": {
-            "account_id": account_id,
-            "campaign_id": campaign_id,
-            "adjustment_type": adjustment_type
-        }
-    }, indent=2)
+    try:
+        # Get credentials and headers
+        creds = get_credentials()
+        headers = get_headers(creds)
+
+        # Import and call the implementation
+        from mutate.budgets import update_campaign_budget as update_budget_impl
+        from mutate.utils import currency_to_micros
+
+        # Convert currency to micros if provided
+        new_amount_micros = None
+        if new_daily_budget_currency:
+            new_amount_micros = currency_to_micros(new_daily_budget_currency)
+        elif new_daily_budget_micros:
+            new_amount_micros = new_daily_budget_micros
+
+        result = update_budget_impl(
+            credentials=creds,
+            headers=headers,
+            customer_id=account_id,
+            campaign_id=campaign_id,
+            campaign_resource_name=campaign_resource_name,
+            new_amount_micros=new_amount_micros,
+            adjustment_type=adjustment_type,
+            adjustment_value=adjustment_value,
+            api_version=API_VERSION
+        )
+
+        return json.dumps(result, indent=2)
+
+    except ValueError as e:
+        logger.error(f"Validation error in update_campaign_budget: {str(e)}")
+        return json.dumps({
+            "error": "Validation error",
+            "message": str(e)
+        }, indent=2)
+    except Exception as e:
+        logger.error(f"Error in update_campaign_budget: {str(e)}")
+        return json.dumps({
+            "error": "Failed to update budget",
+            "message": str(e),
+            "type": type(e).__name__
+        }, indent=2)
 
 @mcp.tool()
 async def set_target_roas(
@@ -1643,16 +1676,41 @@ async def set_target_roas(
         campaign_id: "9876543210"
         target_roas: 3.0  # 300% ROAS
     """
-    # Phase 3: Implementation will be added
-    return json.dumps({
-        "status": "stub",
-        "message": "set_target_roas will be implemented in Phase 3",
-        "requested_params": {
-            "account_id": account_id,
-            "campaign_id": campaign_id,
-            "target_roas": target_roas
-        }
-    }, indent=2)
+    try:
+        # Get credentials and headers
+        creds = get_credentials()
+        headers = get_headers(creds)
+
+        # Import and call the implementation
+        from mutate.bidding import set_target_roas as set_roas_impl
+
+        result = set_roas_impl(
+            credentials=creds,
+            headers=headers,
+            customer_id=account_id,
+            campaign_id=campaign_id,
+            campaign_resource_name=campaign_resource_name,
+            target_roas=target_roas,
+            cpc_bid_ceiling_micros=cpc_bid_ceiling_micros,
+            cpc_bid_floor_micros=cpc_bid_floor_micros,
+            api_version=API_VERSION
+        )
+
+        return json.dumps(result, indent=2)
+
+    except ValueError as e:
+        logger.error(f"Validation error in set_target_roas: {str(e)}")
+        return json.dumps({
+            "error": "Validation error",
+            "message": str(e)
+        }, indent=2)
+    except Exception as e:
+        logger.error(f"Error in set_target_roas: {str(e)}")
+        return json.dumps({
+            "error": "Failed to set target ROAS",
+            "message": str(e),
+            "type": type(e).__name__
+        }, indent=2)
 
 @mcp.tool()
 async def pause_campaign(
