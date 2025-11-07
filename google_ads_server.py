@@ -1957,6 +1957,102 @@ async def attach_merchant_center(
             "type": type(e).__name__
         }, indent=2)
 
+
+@mcp.tool()
+async def run_gaql_query(
+    account_id: str = Field(description="Google Ads customer ID (10 digits, no dashes)"),
+    query: str = Field(description="GAQL (Google Ads Query Language) query to execute"),
+    page_size: int = Field(default=1000, description="Number of results per page (max 10000)")
+) -> str:
+    """
+    Execute a GAQL (Google Ads Query Language) query for reporting and analytics.
+
+    Use this tool to run custom queries from the GAQL Recipe Book (docs/GAQL_RECIPES.md).
+
+    Args:
+        account_id: Google Ads customer ID
+        query: GAQL query (SELECT ... FROM ... WHERE ...)
+        page_size: Results per page (1-10000)
+
+    Returns:
+        JSON with query results
+
+    Examples:
+        # Performance Max last 7 days
+        account_id: "1234567890"
+        query: "SELECT campaign.id, campaign.name, metrics.cost_micros, metrics.conversions FROM campaign WHERE campaign.advertising_channel_type = 'PERFORMANCE_MAX' AND segments.date DURING LAST_7_DAYS"
+
+        # Budget pacing today
+        account_id: "1234567890"
+        query: "SELECT campaign.name, campaign_budget.amount_micros, metrics.cost_micros FROM campaign WHERE segments.date = '2025-11-07'"
+
+    See docs/GAQL_RECIPES.md for 20+ ready-to-use query recipes.
+    """
+    try:
+        import requests
+
+        # Get credentials
+        creds = get_credentials()
+        headers = get_headers(creds)
+
+        # Import utilities
+        from mutate.utils import format_customer_id
+
+        # Format customer ID
+        formatted_customer_id = format_customer_id(account_id)
+
+        # Build request
+        url = f"https://googleads.googleapis.com/{API_VERSION}/customers/{formatted_customer_id}/googleAds:search"
+
+        payload = {
+            "query": query,
+            "pageSize": min(page_size, 10000)
+        }
+
+        logger.info(f"Executing GAQL query for customer {formatted_customer_id}")
+        logger.debug(f"Query: {query}")
+
+        response = requests.post(url, headers=headers, json=payload)
+
+        if response.status_code != 200:
+            error_msg = f"Failed to execute query: {response.text}"
+            logger.error(error_msg)
+            return json.dumps({
+                "error": "Failed to execute GAQL query",
+                "message": response.text,
+                "status_code": response.status_code,
+                "query": query
+            }, indent=2)
+
+        result = response.json()
+
+        # Count results
+        result_count = len(result.get('results', []))
+        logger.info(f"Query returned {result_count} results")
+
+        # Add metadata
+        response_data = {
+            "success": True,
+            "account_id": account_id,
+            "result_count": result_count,
+            "results": result.get('results', []),
+            "field_mask": result.get('fieldMask'),
+            "total_results_count": result.get('totalResultsCount'),
+            "next_page_token": result.get('nextPageToken')
+        }
+
+        return json.dumps(response_data, indent=2)
+
+    except Exception as e:
+        logger.error(f"Error in run_gaql_query: {str(e)}")
+        return json.dumps({
+            "error": "Failed to execute GAQL query",
+            "message": str(e),
+            "type": type(e).__name__,
+            "query": query
+        }, indent=2)
+
+
 if __name__ == "__main__":
     # Start the MCP server on stdio transport
     mcp.run(transport="stdio")
