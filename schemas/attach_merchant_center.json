@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Attach Merchant Center",
+  "description": "Schema for linking a Google Merchant Center feed to a Performance Max campaign",
+  "type": "object",
+  "required": [
+    "account_id",
+    "campaign_id",
+    "merchant_center_id"
+  ],
+  "properties": {
+    "account_id": {
+      "type": "string",
+      "description": "Google Ads customer ID (10 digits, no dashes)",
+      "pattern": "^[0-9]{10}$",
+      "examples": ["1234567890"]
+    },
+    "campaign_id": {
+      "type": "string",
+      "description": "Performance Max campaign ID",
+      "pattern": "^[0-9]+$",
+      "examples": ["9876543210"]
+    },
+    "campaign_resource_name": {
+      "type": "string",
+      "description": "Full campaign resource name (alternative to campaign_id)",
+      "pattern": "^customers/[0-9]+/campaigns/[0-9]+$",
+      "examples": ["customers/1234567890/campaigns/9876543210"]
+    },
+    "merchant_center_id": {
+      "type": "string",
+      "description": "Google Merchant Center account ID",
+      "pattern": "^[0-9]+$",
+      "examples": ["123456789"]
+    },
+    "feed_label": {
+      "type": "string",
+      "description": "Optional feed label to filter products from Merchant Center",
+      "maxLength": 20,
+      "examples": ["promo_nov2025", "sale_items", "new_arrivals"]
+    },
+    "sales_country": {
+      "type": "string",
+      "description": "Country code for the feed (ISO 3166-1 alpha-2)",
+      "pattern": "^[A-Z]{2}$",
+      "examples": ["TH", "US", "GB"]
+    },
+    "language_code": {
+      "type": "string",
+      "description": "Language code for the feed (ISO 639-1)",
+      "pattern": "^[a-z]{2}$",
+      "examples": ["th", "en"]
+    },
+    "asset_group_id": {
+      "type": "string",
+      "description": "Specific asset group ID to link the feed to (optional, will use default if not provided)",
+      "pattern": "^[0-9]+$",
+      "examples": ["1122334455"]
+    },
+    "replace_existing": {
+      "type": "boolean",
+      "description": "Replace existing Merchant Center link if one exists",
+      "default": false
+    }
+  }
+}

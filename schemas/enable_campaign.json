@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Enable Campaign",
+  "description": "Schema for enabling (activating) one or multiple campaigns",
+  "type": "object",
+  "required": [
+    "account_id"
+  ],
+  "properties": {
+    "account_id": {
+      "type": "string",
+      "description": "Google Ads customer ID (10 digits, no dashes)",
+      "pattern": "^[0-9]{10}$",
+      "examples": ["1234567890"]
+    },
+    "campaign_id": {
+      "type": "string",
+      "description": "Single campaign ID to enable",
+      "pattern": "^[0-9]+$",
+      "examples": ["9876543210"]
+    },
+    "campaign_ids": {
+      "type": "array",
+      "description": "Multiple campaign IDs to enable",
+      "items": {
+        "type": "string",
+        "pattern": "^[0-9]+$"
+      },
+      "minItems": 1,
+      "examples": [["9876543210", "9876543211", "9876543212"]]
+    },
+    "campaign_resource_name": {
+      "type": "string",
+      "description": "Full campaign resource name",
+      "pattern": "^customers/[0-9]+/campaigns/[0-9]+$",
+      "examples": ["customers/1234567890/campaigns/9876543210"]
+    },
+    "campaign_name_pattern": {
+      "type": "string",
+      "description": "Enable campaigns matching this name pattern (use with caution)",
+      "examples": ["Production Campaign*", "*Launch 2025*"]
+    },
+    "confirm": {
+      "type": "boolean",
+      "description": "Confirmation flag for bulk operations (required when using patterns)",
+      "default": false
+    },
+    "safety_check": {
+      "type": "boolean",
+      "description": "Perform safety checks before enabling (budget, targeting, assets)",
+      "default": true
+    }
+  },
+  "oneOf": [
+    {
+      "required": ["campaign_id"]
+    },
+    {
+      "required": ["campaign_ids"]
+    },
+    {
+      "required": ["campaign_resource_name"]
+    },
+    {
+      "required": ["campaign_name_pattern", "confirm"]
+    }
+  ]
+}

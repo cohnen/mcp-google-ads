@@ -1,0 +1,62 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Update Campaign Budget",
+  "description": "Schema for updating an existing campaign's budget",
+  "type": "object",
+  "required": [
+    "account_id"
+  ],
+  "properties": {
+    "account_id": {
+      "type": "string",
+      "description": "Google Ads customer ID (10 digits, no dashes)",
+      "pattern": "^[0-9]{10}$",
+      "examples": ["1234567890"]
+    },
+    "campaign_id": {
+      "type": "string",
+      "description": "Campaign ID to update",
+      "pattern": "^[0-9]+$",
+      "examples": ["9876543210"]
+    },
+    "campaign_resource_name": {
+      "type": "string",
+      "description": "Full campaign resource name (alternative to campaign_id)",
+      "pattern": "^customers/[0-9]+/campaigns/[0-9]+$",
+      "examples": ["customers/1234567890/campaigns/9876543210"]
+    },
+    "new_daily_budget_micros": {
+      "type": "integer",
+      "description": "New daily budget in micros (1,000,000 micros = 1 currency unit)",
+      "minimum": 1000000,
+      "examples": [2000000000]
+    },
+    "new_daily_budget_currency": {
+      "type": "number",
+      "description": "New daily budget in actual currency. Will be converted to micros automatically",
+      "minimum": 1,
+      "examples": [2000]
+    },
+    "adjustment_type": {
+      "type": "string",
+      "description": "Type of budget adjustment",
+      "enum": ["SET", "INCREASE_BY_PERCENT", "DECREASE_BY_PERCENT", "INCREASE_BY_AMOUNT", "DECREASE_BY_AMOUNT"],
+      "default": "SET",
+      "examples": ["SET", "INCREASE_BY_PERCENT"]
+    },
+    "adjustment_value": {
+      "type": "number",
+      "description": "Value for adjustment (percentage for PERCENT types, amount for AMOUNT types)",
+      "minimum": 0,
+      "examples": [20, 500]
+    }
+  },
+  "anyOf": [
+    {
+      "required": ["campaign_id"]
+    },
+    {
+      "required": ["campaign_resource_name"]
+    }
+  ]
+}

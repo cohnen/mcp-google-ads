@@ -1,0 +1,115 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Create Performance Max Campaign",
+  "description": "Schema for creating a new Performance Max campaign with all necessary settings",
+  "type": "object",
+  "required": [
+    "account_id",
+    "campaign_name"
+  ],
+  "properties": {
+    "account_id": {
+      "type": "string",
+      "description": "Google Ads customer ID (10 digits, no dashes)",
+      "pattern": "^[0-9]{10}$",
+      "examples": ["1234567890"]
+    },
+    "campaign_name": {
+      "type": "string",
+      "description": "Name of the Performance Max campaign",
+      "minLength": 1,
+      "maxLength": 255,
+      "examples": ["SEW | Sunglasses PMax | TH | 2025-11"]
+    },
+    "daily_budget_micros": {
+      "type": "integer",
+      "description": "Daily budget in micros (1,000,000 micros = 1 currency unit). For THB, 1500 THB = 1500000000 micros",
+      "minimum": 1000000,
+      "examples": [1500000000]
+    },
+    "daily_budget_currency": {
+      "type": "number",
+      "description": "Daily budget in actual currency (e.g., 1500 for 1500 THB). Will be converted to micros automatically",
+      "minimum": 1,
+      "examples": [1500]
+    },
+    "target_roas": {
+      "type": "number",
+      "description": "Target Return on Ad Spend (e.g., 2.5 means 250% ROAS)",
+      "minimum": 0.01,
+      "maximum": 100,
+      "examples": [2.5, 3.0, 4.0]
+    },
+    "merchant_center_id": {
+      "type": "string",
+      "description": "Google Merchant Center account ID to link",
+      "pattern": "^[0-9]+$",
+      "examples": ["123456789"]
+    },
+    "feed_label": {
+      "type": "string",
+      "description": "Feed label to filter products from Merchant Center",
+      "maxLength": 20,
+      "examples": ["promo_nov2025", "clearance", "bestsellers"]
+    },
+    "start_date": {
+      "type": "string",
+      "description": "Campaign start date in YYYY-MM-DD format",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+      "examples": ["2025-11-10", "2025-12-01"]
+    },
+    "end_date": {
+      "type": "string",
+      "description": "Campaign end date in YYYY-MM-DD format (optional)",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+      "examples": ["2025-12-31"]
+    },
+    "status": {
+      "type": "string",
+      "description": "Initial campaign status",
+      "enum": ["PAUSED", "ENABLED"],
+      "default": "PAUSED",
+      "examples": ["PAUSED"]
+    },
+    "asset_group_name": {
+      "type": "string",
+      "description": "Name for the default asset group (optional, will use campaign name + ' Assets' if not provided)",
+      "maxLength": 255,
+      "examples": ["Product Images and Text"]
+    },
+    "final_url": {
+      "type": "string",
+      "description": "Final URL for the asset group",
+      "format": "uri",
+      "examples": ["https://example.com/products"]
+    },
+    "country_codes": {
+      "type": "array",
+      "description": "Target country codes (ISO 3166-1 alpha-2)",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z]{2}$"
+      },
+      "minItems": 1,
+      "examples": [["TH"], ["US", "CA", "GB"]]
+    },
+    "language_codes": {
+      "type": "array",
+      "description": "Target language codes (ISO 639-1)",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z]{2}$"
+      },
+      "minItems": 1,
+      "examples": [["th"], ["en", "es"]]
+    }
+  },
+  "anyOf": [
+    {
+      "required": ["daily_budget_micros"]
+    },
+    {
+      "required": ["daily_budget_currency"]
+    }
+  ]
+}

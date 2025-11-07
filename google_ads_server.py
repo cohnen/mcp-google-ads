@@ -1446,10 +1446,10 @@ async def list_resources(
 ) -> str:
     """
     List valid resources that can be used in GAQL FROM clauses.
-    
+
     Args:
         customer_id: The Google Ads customer ID as a string
-        
+
     Returns:
         Formatted list of valid resources
     """
@@ -1467,9 +1467,283 @@ async def list_resources(
         ORDER BY
             google_ads_field.name
     """
-    
+
     # Use your existing run_gaql function to execute this query
     return await run_gaql(customer_id, query)
+
+# ============================================================================
+# MUTATE OPERATIONS (Phase 1+)
+# ============================================================================
+
+@mcp.tool()
+async def create_pmax_campaign(
+    account_id: str = Field(description="Google Ads customer ID (10 digits, no dashes)"),
+    campaign_name: str = Field(description="Name of the Performance Max campaign"),
+    daily_budget_micros: int = Field(default=None, description="Daily budget in micros (1,000,000 micros = 1 currency unit)"),
+    daily_budget_currency: float = Field(default=None, description="Daily budget in actual currency (will be converted to micros)"),
+    target_roas: float = Field(default=None, description="Target Return on Ad Spend (e.g., 2.5 means 250% ROAS)"),
+    merchant_center_id: str = Field(default=None, description="Google Merchant Center account ID to link"),
+    feed_label: str = Field(default=None, description="Feed label to filter products from Merchant Center"),
+    start_date: str = Field(default=None, description="Campaign start date in YYYY-MM-DD format"),
+    end_date: str = Field(default=None, description="Campaign end date in YYYY-MM-DD format"),
+    status: str = Field(default="PAUSED", description="Initial campaign status (PAUSED or ENABLED)"),
+    final_url: str = Field(default=None, description="Final URL for the asset group"),
+    country_codes: List[str] = Field(default=None, description="Target country codes (ISO 3166-1 alpha-2)"),
+    language_codes: List[str] = Field(default=None, description="Target language codes (ISO 639-1)")
+) -> str:
+    """
+    Create a new Performance Max campaign.
+
+    This tool creates a complete Performance Max campaign with budget,
+    targeting, and optional Merchant Center integration.
+
+    Args:
+        account_id: Google Ads customer ID
+        campaign_name: Name of the campaign
+        daily_budget_micros or daily_budget_currency: Daily budget (provide one)
+        target_roas: Optional target ROAS
+        merchant_center_id: Optional Merchant Center ID to link
+        feed_label: Optional feed label for product filtering
+        start_date: Optional start date (YYYY-MM-DD)
+        end_date: Optional end date (YYYY-MM-DD)
+        status: Initial status (default: PAUSED)
+        final_url: Asset group final URL
+        country_codes: Target countries
+        language_codes: Target languages
+
+    Returns:
+        JSON with created campaign details including resource names
+
+    Example:
+        account_id: "1234567890"
+        campaign_name: "SEW | Sunglasses PMax | TH | 2025-11"
+        daily_budget_currency: 1500
+        target_roas: 2.5
+        merchant_center_id: "123456789"
+        feed_label: "promo_nov2025"
+        country_codes: ["TH"]
+        language_codes: ["th"]
+    """
+    # Phase 2: Implementation will be added
+    return json.dumps({
+        "status": "stub",
+        "message": "create_pmax_campaign will be implemented in Phase 2",
+        "requested_params": {
+            "account_id": account_id,
+            "campaign_name": campaign_name,
+            "daily_budget_micros": daily_budget_micros,
+            "daily_budget_currency": daily_budget_currency,
+            "target_roas": target_roas
+        }
+    }, indent=2)
+
+@mcp.tool()
+async def update_campaign_budget(
+    account_id: str = Field(description="Google Ads customer ID (10 digits, no dashes)"),
+    campaign_id: str = Field(default=None, description="Campaign ID to update"),
+    campaign_resource_name: str = Field(default=None, description="Full campaign resource name (alternative to campaign_id)"),
+    new_daily_budget_micros: int = Field(default=None, description="New daily budget in micros"),
+    new_daily_budget_currency: float = Field(default=None, description="New daily budget in actual currency"),
+    adjustment_type: str = Field(default="SET", description="Type of adjustment: SET, INCREASE_BY_PERCENT, DECREASE_BY_PERCENT, etc."),
+    adjustment_value: float = Field(default=None, description="Value for adjustment (percentage or amount)")
+) -> str:
+    """
+    Update an existing campaign's budget.
+
+    This tool allows you to set a new budget or adjust the current budget
+    by percentage or absolute amount.
+
+    Args:
+        account_id: Google Ads customer ID
+        campaign_id or campaign_resource_name: Campaign identifier
+        new_daily_budget_micros or new_daily_budget_currency: New budget
+        adjustment_type: How to adjust (SET, INCREASE_BY_PERCENT, etc.)
+        adjustment_value: Amount/percentage to adjust
+
+    Returns:
+        JSON with update status and new budget value
+
+    Example:
+        account_id: "1234567890"
+        campaign_id: "9876543210"
+        adjustment_type: "INCREASE_BY_PERCENT"
+        adjustment_value: 20  # Increase budget by 20%
+    """
+    # Phase 3: Implementation will be added
+    return json.dumps({
+        "status": "stub",
+        "message": "update_campaign_budget will be implemented in Phase 3",
+        "requested_params": {
+            "account_id": account_id,
+            "campaign_id": campaign_id,
+            "adjustment_type": adjustment_type
+        }
+    }, indent=2)
+
+@mcp.tool()
+async def set_target_roas(
+    account_id: str = Field(description="Google Ads customer ID (10 digits, no dashes)"),
+    campaign_id: str = Field(default=None, description="Campaign ID to update"),
+    campaign_resource_name: str = Field(default=None, description="Full campaign resource name"),
+    target_roas: float = Field(description="Target Return on Ad Spend (e.g., 2.5 means 250% ROAS)"),
+    cpc_bid_ceiling_micros: int = Field(default=None, description="Optional maximum CPC bid limit in micros"),
+    cpc_bid_floor_micros: int = Field(default=None, description="Optional minimum CPC bid limit in micros")
+) -> str:
+    """
+    Set or update target ROAS bidding strategy for a campaign.
+
+    Args:
+        account_id: Google Ads customer ID
+        campaign_id or campaign_resource_name: Campaign identifier
+        target_roas: Target ROAS value (e.g., 2.5 for 250% ROAS)
+        cpc_bid_ceiling_micros: Optional max CPC
+        cpc_bid_floor_micros: Optional min CPC
+
+    Returns:
+        JSON with update status
+
+    Example:
+        account_id: "1234567890"
+        campaign_id: "9876543210"
+        target_roas: 3.0  # 300% ROAS
+    """
+    # Phase 3: Implementation will be added
+    return json.dumps({
+        "status": "stub",
+        "message": "set_target_roas will be implemented in Phase 3",
+        "requested_params": {
+            "account_id": account_id,
+            "campaign_id": campaign_id,
+            "target_roas": target_roas
+        }
+    }, indent=2)
+
+@mcp.tool()
+async def pause_campaign(
+    account_id: str = Field(description="Google Ads customer ID (10 digits, no dashes)"),
+    campaign_id: str = Field(default=None, description="Single campaign ID to pause"),
+    campaign_ids: List[str] = Field(default=None, description="Multiple campaign IDs to pause"),
+    campaign_resource_name: str = Field(default=None, description="Full campaign resource name"),
+    campaign_name_pattern: str = Field(default=None, description="Pause campaigns matching this pattern"),
+    confirm: bool = Field(default=False, description="Confirmation flag for bulk operations")
+) -> str:
+    """
+    Pause one or multiple campaigns.
+
+    Args:
+        account_id: Google Ads customer ID
+        campaign_id: Single campaign to pause
+        campaign_ids: Multiple campaigns to pause
+        campaign_resource_name: Campaign resource name
+        campaign_name_pattern: Pattern to match campaign names
+        confirm: Required for bulk operations
+
+    Returns:
+        JSON with paused campaigns status
+
+    Example:
+        account_id: "1234567890"
+        campaign_id: "9876543210"
+    """
+    # Phase 4: Implementation will be added
+    return json.dumps({
+        "status": "stub",
+        "message": "pause_campaign will be implemented in Phase 4",
+        "requested_params": {
+            "account_id": account_id,
+            "campaign_id": campaign_id,
+            "campaign_ids": campaign_ids
+        }
+    }, indent=2)
+
+@mcp.tool()
+async def enable_campaign(
+    account_id: str = Field(description="Google Ads customer ID (10 digits, no dashes)"),
+    campaign_id: str = Field(default=None, description="Single campaign ID to enable"),
+    campaign_ids: List[str] = Field(default=None, description="Multiple campaign IDs to enable"),
+    campaign_resource_name: str = Field(default=None, description="Full campaign resource name"),
+    campaign_name_pattern: str = Field(default=None, description="Enable campaigns matching this pattern"),
+    confirm: bool = Field(default=False, description="Confirmation flag for bulk operations"),
+    safety_check: bool = Field(default=True, description="Perform safety checks before enabling")
+) -> str:
+    """
+    Enable (activate) one or multiple campaigns.
+
+    Args:
+        account_id: Google Ads customer ID
+        campaign_id: Single campaign to enable
+        campaign_ids: Multiple campaigns to enable
+        campaign_resource_name: Campaign resource name
+        campaign_name_pattern: Pattern to match campaign names
+        confirm: Required for bulk operations
+        safety_check: Run safety checks before enabling
+
+    Returns:
+        JSON with enabled campaigns status
+
+    Example:
+        account_id: "1234567890"
+        campaign_id: "9876543210"
+        safety_check: true
+    """
+    # Phase 4: Implementation will be added
+    return json.dumps({
+        "status": "stub",
+        "message": "enable_campaign will be implemented in Phase 4",
+        "requested_params": {
+            "account_id": account_id,
+            "campaign_id": campaign_id,
+            "safety_check": safety_check
+        }
+    }, indent=2)
+
+@mcp.tool()
+async def attach_merchant_center(
+    account_id: str = Field(description="Google Ads customer ID (10 digits, no dashes)"),
+    campaign_id: str = Field(default=None, description="Performance Max campaign ID"),
+    campaign_resource_name: str = Field(default=None, description="Full campaign resource name"),
+    merchant_center_id: str = Field(description="Google Merchant Center account ID"),
+    feed_label: str = Field(default=None, description="Optional feed label to filter products"),
+    sales_country: str = Field(default=None, description="Country code for the feed (ISO 3166-1 alpha-2)"),
+    language_code: str = Field(default=None, description="Language code for the feed (ISO 639-1)"),
+    asset_group_id: str = Field(default=None, description="Specific asset group ID to link the feed to"),
+    replace_existing: bool = Field(default=False, description="Replace existing Merchant Center link")
+) -> str:
+    """
+    Link a Google Merchant Center feed to a Performance Max campaign.
+
+    Args:
+        account_id: Google Ads customer ID
+        campaign_id or campaign_resource_name: Campaign identifier
+        merchant_center_id: Merchant Center account ID
+        feed_label: Optional product filter label
+        sales_country: Country code (e.g., "TH")
+        language_code: Language code (e.g., "th")
+        asset_group_id: Specific asset group to link
+        replace_existing: Replace existing link
+
+    Returns:
+        JSON with attachment status
+
+    Example:
+        account_id: "1234567890"
+        campaign_id: "9876543210"
+        merchant_center_id: "123456789"
+        feed_label: "promo_nov2025"
+        sales_country: "TH"
+        language_code: "th"
+    """
+    # Phase 4: Implementation will be added
+    return json.dumps({
+        "status": "stub",
+        "message": "attach_merchant_center will be implemented in Phase 4",
+        "requested_params": {
+            "account_id": account_id,
+            "campaign_id": campaign_id,
+            "merchant_center_id": merchant_center_id,
+            "feed_label": feed_label
+        }
+    }, indent=2)
 
 if __name__ == "__main__":
     # Start the MCP server on stdio transport
